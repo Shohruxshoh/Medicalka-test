@@ -1,0 +1,97 @@
+# Deployment for a server that ALREADY has a reverse proxy (host nginx) on :80/:443.
+#
+# The app is published on 127.0.0.1 only; you add an nginx vhost on the host that
+# proxies your subdomain to it (see deploy/social-api.nginx.conf).
+# Tuned for a small, shared server: 2 workers + per-container memory limits.
+#
+#   docker compose -f docker-compose.server.yml up -d --build
+
+services:
+  migrate:
+    build: .
+    command: alembic upgrade head
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    build: .
+    command:
+      - uvicorn
+      - app.main:app
+      - --host=0.0.0.0
+      - --port=8000
+      - --workers=2
+      - --proxy-headers
+      - --forwarded-allow-ips=*
+    env_file:
+      - .env
+    environment:
+      DEBUG: "false"
+    ports:
+      - "127.0.0.1:8100:8000"   # localhost only — the host nginx proxies here
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    mem_limit: 600m
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: social
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d social"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    mem_limit: 384m
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    mem_limit: 192m
+
+  worker:
+    build: .
+    command: celery -A app.tasks.celery_app:celery_app worker --loglevel=info --concurrency=2
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    mem_limit: 400m
+
+  beat:
+    build: .
+    command: celery -A app.tasks.celery_app:celery_app beat --loglevel=info
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - worker
+    restart: unless-stopped
+    mem_limit: 128m
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -1,0 +1,14 @@
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+# pycodestyle, pyflakes, isort, pyupgrade, warnings, flake8-bugbear
+select = ["E", "F", "I", "UP", "W", "B"]
+# B008: FastAPI intentionally uses Depends()/Query() as argument defaults.
+# E501: line length is handled by the formatter.
+ignore = ["B008", "E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# Alembic's generated files and env don't need import-order / unused checks.
+"alembic/*" = ["F401", "E402"]
