@@ -8,12 +8,15 @@
 ![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-22%20passing-brightgreen)
 ![Lint](https://img.shields.io/badge/lint-ruff-261230)
+[![Live demo](https://img.shields.io/badge/live%20demo-social.n--shohrux.uz-2ea44f?logo=cloudflare&logoColor=white)](https://social.n-shohrux.uz/docs)
 
 A backend for a mini social network — users, posts, comments, likes, JWT auth,
 email verification and background jobs — built with **FastAPI · PostgreSQL ·
 Redis · Celery**, fully containerized with Docker.
 
 > Test-assignment implementation, focused on **architecture, code quality and correctness** rather than feature count.
+
+**🔗 Live demo:** **[social.n-shohrux.uz/docs](https://social.n-shohrux.uz/docs)** — interactive Swagger UI (deployed behind Cloudflare + nginx).
 
 ---
 
