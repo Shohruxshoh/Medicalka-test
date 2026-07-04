@@ -12,7 +12,6 @@ router = APIRouter(tags=["feed"])
 
 
 @router.get("/all", response_model=Page[FeedUser])
-@router.get("/feed", response_model=Page[FeedUser])
 async def get_feed(
     pagination: PaginationParams = Depends(),
     _: User = Depends(get_current_user),
